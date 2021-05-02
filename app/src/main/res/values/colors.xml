@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <color name="background">#9D4DA4</color>
+
+    <color name="color1">#EE4876</color>
+    <color name="color2">#B64FA0</color>
+    <color name="color3">#9253BC</color>
+    <color name="color4">#4C5CF0</color>
+
+    <color name="transparent">#55000000</color>
+    <color name="blue">#4C5CF0</color>
+
+    <color name="stroke">#F48741</color>
+
+    <color name="bgRowBackground">#FA315B</color>
+
+    <color name="colorPrimary">#FF03DAC5</color>
+
+    <!--colors for profile-->
+    <color name="profilePrimaryDark">#FF3B30</color>
+    <color name="profileAccentColor">#F7F7F7</color>
+    <color name="whiteTextColor">#fff</color>
+    <color name="profileBackground">#fff</color>
+    <color name="blackTextColor">#000</color>
+    <color name="profileEditTextColor">#707070</color>
+    <color name="overlayBackgroundMenu">#7f004487</color>
+</resources>

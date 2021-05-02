@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "433346105543",
+    "firebase_url": "https://testbot-vugoap.firebaseio.com",
+    "project_id": "testbot-vugoap",
+    "storage_bucket": "testbot-vugoap.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:433346105543:android:2119f0db3e277bc93f2ee2",
+        "android_client_info": {
+          "package_name": "tbc.uncagedmist.gamewallpaper"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "433346105543-m1mv3182u3r9ff3l7j7gioh6s6ro3pb4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB7V7ypXsJHyJRKMNPODX-G8om_Hmf0G0I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "433346105543-e3uq8rie36cinj5852428t3lb36u3afo.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

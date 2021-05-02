@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/action_category"
+        android:enabled="true"
+        android:icon="@drawable/ic_baseline_category_24"
+        android:title="Category"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/action_trending"
+        android:enabled="true"
+        android:icon="@drawable/ic_baseline_stream_24"
+        android:title="Trending"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/action_recent"
+        android:enabled="true"
+        android:icon="@drawable/ic_baseline_history_edu_24"
+        android:title="Recent"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/action_favourite"
+        android:enabled="true"
+        android:icon="@drawable/ic_baseline_favorite_border_24"
+        android:title="Favourites"
+        app:showAsAction="ifRoom" />
+</menu>
