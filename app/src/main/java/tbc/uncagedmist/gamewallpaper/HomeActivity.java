@@ -1,25 +1,9 @@
 package tbc.uncagedmist.gamewallpaper;
 
-import androidx.annotation.ColorInt;
-import androidx.annotation.ColorRes;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentTransaction;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.content.res.TypedArray;
 import android.graphics.Color;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -28,61 +12,58 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Toast;
 
+import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.LoadAdError;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.navigation.NavigationView;
 import com.google.android.play.core.review.ReviewInfo;
 import com.google.android.play.core.review.ReviewManager;
-import com.google.android.play.core.tasks.OnCompleteListener;
-import com.google.android.play.core.tasks.OnSuccessListener;
-import com.google.android.play.core.tasks.Task;
 import com.google.android.play.core.review.ReviewManagerFactory;
+import com.google.android.play.core.tasks.Task;
+import com.google.firebase.database.annotations.NotNull;
 import com.shashank.sony.fancydialoglib.Animation;
 import com.shashank.sony.fancydialoglib.FancyAlertDialog;
 import com.shashank.sony.fancydialoglib.Icon;
-import com.yarolegovich.slidingrootnav.SlidingRootNav;
-import com.yarolegovich.slidingrootnav.SlidingRootNavBuilder;
 
-import java.util.Arrays;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 
-import am.appwise.components.ni.NoInternetDialog;
 import tbc.uncagedmist.gamewallpaper.Fragments.CategoryFragment;
 import tbc.uncagedmist.gamewallpaper.Fragments.FavouriteFragment;
 import tbc.uncagedmist.gamewallpaper.Fragments.PopularFragment;
 import tbc.uncagedmist.gamewallpaper.Fragments.RecentFragment;
 import tbc.uncagedmist.gamewallpaper.Fragments.SettingsFragment;
-import tbc.uncagedmist.gamewallpaper.SlideRoot.DrawerAdapter;
-import tbc.uncagedmist.gamewallpaper.SlideRoot.DrawerItem;
-import tbc.uncagedmist.gamewallpaper.SlideRoot.SimpleItem;
-import tbc.uncagedmist.gamewallpaper.SlideRoot.SpaceItem;
 import tbc.uncagedmist.gamewallpaper.Utility.CurvedBottomNavigationView;
 
-public class HomeActivity extends AppCompatActivity implements DrawerAdapter.OnItemSelectedListener {
+public class HomeActivity extends AppCompatActivity
+        implements NavigationView.OnNavigationItemSelectedListener {
 
     ReviewManager manager;
     ReviewInfo reviewInfo;
 
-    NoInternetDialog noInternetDialog;
+    private static final int PERMISSION_REQUEST_CODE = 31;
 
-    private static final int PERMISSION_REQUEST_CODE = 51;
-
-    private static final int POS_HOME = 0;
-    private static final int POS_FAVOURITE = 1;
-    private static final int POS_SETTINGS = 2;
-    private static final int POS_SHARE = 3;
-    private static final int POS_FEED = 4;
-    public static final int POS_EXIT = 6;
-
-    private String[] screenTitles;
-    private Drawable[] screenIcons;
-
-    private SlidingRootNav slidingRootNav;
+    CurvedBottomNavigationView curvedBottomNavigationView;
 
     FloatingActionButton fab;
 
-    CurvedBottomNavigationView navigationView;
+    AdView aboveBanner, bottomBanner;
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull @NotNull String[] permissions,
+                                           @NonNull @NotNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
         switch (requestCode)
@@ -107,19 +88,15 @@ public class HomeActivity extends AppCompatActivity implements DrawerAdapter.OnI
 
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT){
             Window window = getWindow();
-            window.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
+            window.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                    WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
         }
-
         setContentView(R.layout.activity_home);
-
-        noInternetDialog = new NoInternetDialog.Builder(HomeActivity.this).build();
-        manager = ReviewManagerFactory.create(HomeActivity.this);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        fab = findViewById(R.id.fab);
-        navigationView = findViewById(R.id.customBottomBar);
+        manager = ReviewManagerFactory.create(HomeActivity.this);
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 != PackageManager.PERMISSION_GRANTED)   {
@@ -128,68 +105,69 @@ public class HomeActivity extends AppCompatActivity implements DrawerAdapter.OnI
             }, PERMISSION_REQUEST_CODE);
         }
 
-        slidingRootNav = new SlidingRootNavBuilder(this)
-                .withToolbarMenuToggle(toolbar)
-                .withMenuOpened(false)
-                .withContentClickableWhenMenuOpened(false)
-                .withSavedState(savedInstanceState)
-                .withMenuLayout(R.layout.menu_left_drawer)
-                .inject();
+        curvedBottomNavigationView = findViewById(R.id.customBottomBar);
+        fab = findViewById(R.id.fab);
 
-        screenIcons = loadScreenIcons();
-        screenTitles = loadScreenTitles();
+        aboveBanner = findViewById(R.id.aboveBanner);
+        bottomBanner = findViewById(R.id.bottomBanner);
 
-        DrawerAdapter adapter = new DrawerAdapter(Arrays.asList(
-                createItemFor(POS_HOME).setChecked(true),
-                createItemFor(POS_FAVOURITE),
-                createItemFor(POS_SETTINGS),
-                createItemFor(POS_SHARE),
-                createItemFor(POS_FEED),
-                new SpaceItem(48),
-                createItemFor(POS_EXIT)));
-        adapter.setListener(this);
+        AdRequest adRequest = new AdRequest.Builder().build();
 
-        RecyclerView list = findViewById(R.id.list);
-        list.setNestedScrollingEnabled(false);
-        list.setLayoutManager(new LinearLayoutManager(this));
-        list.setAdapter(adapter);
+        aboveBanner.loadAd(adRequest);
+        bottomBanner.loadAd(adRequest);
 
-        adapter.setSelected(POS_HOME);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawer.addDrawerListener(toggle);
+        toggle.syncState();
 
-        navigationView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
-            Fragment fragment;
+        NavigationView navigationView =  findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
 
-            @Override
-            public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
-                if (menuItem.getItemId() == R.id.action_category) {
-                    getSupportActionBar().setTitle(R.string.app_name);
-                    fragment = new CategoryFragment();
-                    fab.setImageResource(R.drawable.ic_baseline_category_24);
-                }
-                else if (menuItem.getItemId() == R.id.action_trending) {
-                    getSupportActionBar().setTitle("Trending");
-                    fragment = new PopularFragment();
-                    fab.setImageResource(R.drawable.ic_baseline_stream_24);
-                }
-                else if (menuItem.getItemId() == R.id.action_recent) {
-                    getSupportActionBar().setTitle("Image History");
-                    fragment = new RecentFragment(getApplicationContext());
-                    fab.setImageResource(R.drawable.ic_baseline_history_edu_24);
-                }
-                else if (menuItem.getItemId() == R.id.action_favourite) {
-                    getSupportActionBar().setTitle("Favourites");
-                    fragment = new FavouriteFragment(getApplicationContext());
-                    fab.setImageResource(R.drawable.ic_baseline_favorite_border_24);
-                }
-                return loadFragment(fragment);
-            }
-        });
+        curvedBottomNavigationView.setSelectedItemId(R.id.action_category);
 
+        curvedBottomNavigationView.setOnNavigationItemSelectedListener(
+                new BottomNavigationView.OnNavigationItemSelectedListener() {
+                    Fragment fragment;
+
+                    @Override
+                    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+
+                        if (item.getItemId() == R.id.action_category) {
+                            getSupportActionBar().setTitle(R.string.app_name);
+                            fragment = new CategoryFragment();
+                            fab.setImageResource(R.drawable.ic_baseline_legend_toggle_24);
+                        }
+                        else if (item.getItemId() == R.id.action_trending) {
+                            getSupportActionBar().setTitle("Trending");
+                            fragment = new PopularFragment();
+                            fab.setImageResource(R.drawable.ic_baseline_stream_24);
+                        }
+                        else if (item.getItemId() == R.id.action_recent) {
+                            getSupportActionBar().setTitle("Image History");
+                            fragment = new RecentFragment(getApplicationContext());
+                            fab.setImageResource(R.drawable.ic_baseline_history_edu_24);
+                        }
+                        else if (item.getItemId() == R.id.action_favourite) {
+                            getSupportActionBar().setTitle("Favourites");
+                            fragment = new FavouriteFragment(getApplicationContext());
+                            fab.setImageResource(R.drawable.ic_baseline_favorite_border_24);
+                        }
+                        return loadFragment(fragment);
+                    }
+                });
+
+        loadFragment(CategoryFragment.getInstance());
+        fab.setImageResource(R.drawable.ic_baseline_legend_toggle_24);
+
+        adMethod();
     }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+    protected void onActivityResult(int requestCode, int resultCode,
+                                    @Nullable  Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
@@ -201,42 +179,117 @@ public class HomeActivity extends AppCompatActivity implements DrawerAdapter.OnI
     }
 
     @Override
-    public void onItemSelected(int position) {
-        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+    public void onBackPressed() {
+        DrawerLayout drawer =  findViewById(R.id.drawer_layout);
+        if (drawer.isDrawerOpen(GravityCompat.START)) {
+            drawer.closeDrawer(GravityCompat.START);
+        }
+        else {
+            exit();
+        }
+    }
 
-        if (position == POS_HOME)   {
+    private void adMethod() {
+        aboveBanner.setAdListener(new AdListener() {
+            @Override
+            public void onAdLoaded() {
+                // Code to be executed when an ad finishes loading.
+            }
+
+            @Override
+            public void onAdFailedToLoad(LoadAdError adError) {
+                // Code to be executed when an ad request fails.
+            }
+
+            @Override
+            public void onAdOpened() {
+                // Code to be executed when an ad opens an overlay that
+                // covers the screen.
+            }
+
+            @Override
+            public void onAdClicked() {
+                // Code to be executed when the user clicks on an ad.
+            }
+
+            @Override
+            public void onAdClosed() {
+                // Code to be executed when the user is about to return
+                // to the app after tapping on an ad.
+            }
+        });
+
+        bottomBanner.setAdListener(new AdListener() {
+            @Override
+            public void onAdLoaded() {
+                // Code to be executed when an ad finishes loading.
+            }
+
+            @Override
+            public void onAdFailedToLoad(LoadAdError adError) {
+                // Code to be executed when an ad request fails.
+            }
+
+            @Override
+            public void onAdOpened() {
+                // Code to be executed when an ad opens an overlay that
+                // covers the screen.
+            }
+
+            @Override
+            public void onAdClicked() {
+                // Code to be executed when the user clicks on an ad.
+            }
+
+            @Override
+            public void onAdClosed() {
+                // Code to be executed when the user is about to return
+                // to the app after tapping on an ad.
+            }
+        });
+    }
+
+    @Override
+    public boolean onNavigationItemSelected(@NonNull @NotNull MenuItem item) {
+        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+        int id = item.getItemId();
+
+        if (id == R.id.nav_home) {
             CategoryFragment categoryFragment = new CategoryFragment();
             transaction.replace(R.id.main_frame,categoryFragment);
             getSupportActionBar().setTitle(R.string.app_name);
-            fab.setImageResource(R.drawable.ic_baseline_category_24);
+            fab.setImageResource(R.drawable.ic_baseline_legend_toggle_24);
         }
-        else if (position == POS_FAVOURITE) {
+        else if (id == R.id.nav_fav)   {
             FavouriteFragment favoriteFragment = new FavouriteFragment(getApplicationContext());
             transaction.replace(R.id.main_frame,favoriteFragment);
             getSupportActionBar().setTitle("Favourites");
             fab.setImageResource(R.drawable.ic_baseline_favorite_border_24);
         }
-        else if (position == POS_SETTINGS) {
+        else if (id == R.id.nav_settings) {
             SettingsFragment settingsFragment = new SettingsFragment();
             transaction.replace(R.id.main_frame,settingsFragment);
             getSupportActionBar().setTitle("Settings");
             fab.setImageResource(R.drawable.ic_baseline_settings_suggest_24);
         }
-        else if (position == POS_SHARE) {
+        else if (id == R.id.nav_share)   {
             fab.setImageResource(R.drawable.ic_baseline_share_24);
             shareApp();
         }
-        else if (position == POS_FEED) {
+        else if (id == R.id.nav_feed) {
             fab.setImageResource(R.drawable.ic_baseline_feedback_24);
             feedback();
         }
-        else if (position == POS_EXIT) {
+        else if (id == R.id.nav_exit) {
             fab.setImageResource(R.drawable.ic_baseline_exit_to_app_24);
             exit();
         }
-        slidingRootNav.closeMenu();
         transaction.addToBackStack(null);
         transaction.commit();
+
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
+        drawer.closeDrawer(GravityCompat.START);
+        return true;
     }
 
     private void feedback() {
@@ -254,16 +307,15 @@ public class HomeActivity extends AppCompatActivity implements DrawerAdapter.OnI
             else {
                 Toast.makeText(HomeActivity.this, "ERROR...", Toast.LENGTH_SHORT).show();
             }
-
         });
     }
 
     private void shareApp() {
         Intent intent = new Intent(Intent.ACTION_SEND);
         intent.setType("text/plain");
-        String message = "Amazing Wallpaper in your way. Install Game Wallpaper App and Make your Display look Colourful! \n https://play.google.com/store/apps/details?id=tbc.uncagedmist.gamewallpaper";
+        String message = "Amazing Wallpaper in your way. Install Game Wallpaper App and Make your Display look Colourful! \n https://play.google.com/store/apps/details?id=tbc.uncagedmist.allgameswallpapers";
         intent.putExtra(Intent.EXTRA_TEXT, message);
-        startActivity(Intent.createChooser(intent, "Share Game Wallpaper App Using"));
+        startActivity(Intent.createChooser(intent, "Share Game Wallpapers App Using"));
     }
 
     private void exit() {
@@ -279,7 +331,7 @@ public class HomeActivity extends AppCompatActivity implements DrawerAdapter.OnI
                 .isCancellable(true)
                 .setIcon(R.drawable.ic_star_border_black_24dp, Icon.Visible)
                 .OnPositiveClicked(() ->
-                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=tbc.uncagedmist.gamewallpaper"))))
+                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=tbc.uncagedmist.allgameswallpapers"))))
                 .OnNegativeClicked(() -> {
                     moveTaskToBack(true);
                     android.os.Process.killProcess(android.os.Process.myPid());
@@ -288,59 +340,13 @@ public class HomeActivity extends AppCompatActivity implements DrawerAdapter.OnI
                 .build();
     }
 
-
-    @SuppressWarnings("rawtypes")
-    private DrawerItem createItemFor(int position) {
-        return new SimpleItem(screenIcons[position], screenTitles[position])
-                .withIconTint(color(R.color.white))
-                .withTextTint(color(R.color.white))
-                .withSelectedIconTint(color(R.color.teal_200))
-                .withSelectedTextTint(color(R.color.teal_200));
-    }
-
-    private String[] loadScreenTitles() {
-        return getResources().getStringArray(R.array.ld_activityScreenTitles);
-    }
-
-    private Drawable[] loadScreenIcons() {
-        TypedArray ta = getResources().obtainTypedArray(R.array.ld_activityScreenIcons);
-        Drawable[] icons = new Drawable[ta.length()];
-        for (int i = 0; i < ta.length(); i++) {
-            int id = ta.getResourceId(i, 0);
-            if (id != 0) {
-                icons[i] = ContextCompat.getDrawable(this, id);
-            }
-        }
-        ta.recycle();
-        return icons;
-    }
-
-    @ColorInt
-    private int color(@ColorRes int res) {
-        return ContextCompat.getColor(this, res);
-    }
-
     private boolean loadFragment(Fragment fragment) {
         if (fragment != null) {
-            final FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-            transaction.replace(R.id.main_frame, fragment);
-            transaction.addToBackStack(null);
-            transaction.commit();
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.main_frame, fragment)
+                    .commit();
             return true;
         }
         return false;
-    }
-
-
-    @Override
-    public void onBackPressed() {
-        exit();
-    }
-
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        noInternetDialog.onDestroy();
     }
 }

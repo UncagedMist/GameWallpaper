@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,16 +18,18 @@ import android.view.WindowManager;
 
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
+import com.google.android.gms.ads.AdError;
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
-import com.google.android.gms.ads.InterstitialAd;
+import com.google.android.gms.ads.FullScreenContentCallback;
 import com.google.android.gms.ads.LoadAdError;
+import com.google.android.gms.ads.interstitial.InterstitialAd;
+import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.squareup.picasso.Picasso;
 
-import am.appwise.components.ni.NoInternetDialog;
 import tbc.uncagedmist.gamewallpaper.Common.Common;
 import tbc.uncagedmist.gamewallpaper.Interface.ItemClickListener;
 import tbc.uncagedmist.gamewallpaper.Model.WallpaperItem;
@@ -35,8 +38,6 @@ import tbc.uncagedmist.gamewallpaper.ViewHolder.ListWallpaperViewHolder;
 public class ListWallpaperActivity extends AppCompatActivity {
 
     AdView aboveBanner, bottomBanner;
-
-    NoInternetDialog noInternetDialog;
 
     RecyclerView recyclerView;
 
@@ -60,8 +61,6 @@ public class ListWallpaperActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         toolbar.setTitle(Common.CATEGORY_SELECTED);
         setSupportActionBar(toolbar);
-
-        noInternetDialog = new NoInternetDialog.Builder(ListWallpaperActivity.this).build();
 
         recyclerView = findViewById(R.id.recycler_list_wallpaper);
 
@@ -107,11 +106,6 @@ public class ListWallpaperActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onAdLeftApplication() {
-                // Code to be executed when the user has left the app.
-            }
-
-            @Override
             public void onAdClosed() {
                 // Code to be executed when the user is about to return
                 // to the app after tapping on an ad.
@@ -138,11 +132,6 @@ public class ListWallpaperActivity extends AppCompatActivity {
             @Override
             public void onAdClicked() {
                 // Code to be executed when the user clicks on an ad.
-            }
-
-            @Override
-            public void onAdLeftApplication() {
-                // Code to be executed when the user has left the app.
             }
 
             @Override
@@ -174,8 +163,8 @@ public class ListWallpaperActivity extends AppCompatActivity {
                     @Override
                     public void onClick(View view, int position) {
 
-                        if (mInterstitialAd.isLoaded()) {
-
+                        if (mInterstitialAd != null) {
+                            mInterstitialAd.show((ListWallpaperActivity.this));
                         }
                         else {
                             Intent intent = new Intent(ListWallpaperActivity.this,ViewWallpaperActivity.class);
@@ -198,17 +187,40 @@ public class ListWallpaperActivity extends AppCompatActivity {
                 int height = parent.getMeasuredHeight() / 2;
                 itemView.setMinimumHeight(height);
 
-                mInterstitialAd = new InterstitialAd(ListWallpaperActivity.this);
-                mInterstitialAd.setAdUnitId(getResources().getString(R.string.FULL_SCREEN));
-                mInterstitialAd.loadAd(new AdRequest.Builder().build());
+                AdRequest adRequest = new AdRequest.Builder().build();
 
-                mInterstitialAd.setAdListener(new AdListener() {
-                    @Override
-                    public void onAdClosed() {
-                        mInterstitialAd.loadAd(new AdRequest.Builder().build());
-                    }
+                InterstitialAd.load(
+                        ListWallpaperActivity.this,
+                        getString(R.string.FULL_SCREEN),
+                        adRequest, new InterstitialAdLoadCallback() {
+                            @Override
+                            public void onAdLoaded(@NonNull InterstitialAd interstitialAd) {
+                                mInterstitialAd = interstitialAd;
 
-                });
+                                mInterstitialAd.setFullScreenContentCallback(new FullScreenContentCallback(){
+                                    @Override
+                                    public void onAdDismissedFullScreenContent() {
+                                        Log.d("TAG", "The ad was dismissed.");
+                                    }
+
+                                    @Override
+                                    public void onAdFailedToShowFullScreenContent(AdError adError) {
+                                        Log.d("TAG", "The ad failed to show.");
+                                    }
+
+                                    @Override
+                                    public void onAdShowedFullScreenContent() {
+                                        mInterstitialAd = null;
+                                        Log.d("TAG", "The ad was shown.");
+                                    }
+                                });
+                            }
+
+                            @Override
+                            public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
+                                mInterstitialAd = null;
+                            }
+                        });
 
                 return new ListWallpaperViewHolder(itemView);
             }
@@ -235,17 +247,12 @@ public class ListWallpaperActivity extends AppCompatActivity {
         }
     }
 
-    @Override
-    protected void onStop() {
-        if (adapter != null)    {
-            adapter.stopListening();
-        }
-        super.onStop();
-    }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        noInternetDialog.onDestroy();
+        if (adapter != null)    {
+            adapter.stopListening();
+        }
     }
 }

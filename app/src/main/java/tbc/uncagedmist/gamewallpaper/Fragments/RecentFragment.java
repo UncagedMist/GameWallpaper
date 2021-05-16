@@ -12,22 +12,17 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-
-import com.google.android.gms.ads.AdListener;
-import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.AdView;
-import com.google.android.gms.ads.LoadAdError;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import am.appwise.components.ni.NoInternetDialog;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 import tbc.uncagedmist.gamewallpaper.Adapter.MyRecyclerAdapter;
+import tbc.uncagedmist.gamewallpaper.Common.Common;
 import tbc.uncagedmist.gamewallpaper.Database.DataSource.RecentsRepository;
 import tbc.uncagedmist.gamewallpaper.Database.LocalDatabase.LocalDatabase;
 import tbc.uncagedmist.gamewallpaper.Database.LocalDatabase.RecentsDataSource;
@@ -36,10 +31,6 @@ import tbc.uncagedmist.gamewallpaper.R;
 
 @SuppressLint("ValidFragment")
 public class RecentFragment extends Fragment {
-
-    AdView aboveBanner, bottomBanner;
-
-    NoInternetDialog noInternetDialog;
 
     private static RecentFragment INSTANCE = null;
 
@@ -78,17 +69,7 @@ public class RecentFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_recent, container, false);
 
-        noInternetDialog = new NoInternetDialog.Builder(getContext()).build();
-
         recyclerView = view.findViewById(R.id.recycler_recents);
-
-        aboveBanner = view.findViewById(R.id.aboveBanner);
-        bottomBanner = view.findViewById(R.id.bottomBanner);
-
-        AdRequest adRequest = new AdRequest.Builder().build();
-
-        aboveBanner.loadAd(adRequest);
-        bottomBanner.loadAd(adRequest);
 
         recyclerView.setHasFixedSize(true);
 
@@ -100,79 +81,12 @@ public class RecentFragment extends Fragment {
         adapter = new MyRecyclerAdapter(context,recentsList);
         recyclerView.setAdapter(adapter);
 
-        loadRecents();
+        if (Common.isConnectedToInternet(getContext()))
+            loadRecents();
+        else
+            Toast.makeText(getContext(), "Please Connect to Internet...", Toast.LENGTH_SHORT).show();
 
         return view;
-    }
-
-    private void adMethod() {
-        aboveBanner.setAdListener(new AdListener() {
-            @Override
-            public void onAdLoaded() {
-                // Code to be executed when an ad finishes loading.
-            }
-
-            @Override
-            public void onAdFailedToLoad(LoadAdError adError) {
-                // Code to be executed when an ad request fails.
-            }
-
-            @Override
-            public void onAdOpened() {
-                // Code to be executed when an ad opens an overlay that
-                // covers the screen.
-            }
-
-            @Override
-            public void onAdClicked() {
-                // Code to be executed when the user clicks on an ad.
-            }
-
-            @Override
-            public void onAdLeftApplication() {
-                // Code to be executed when the user has left the app.
-            }
-
-            @Override
-            public void onAdClosed() {
-                // Code to be executed when the user is about to return
-                // to the app after tapping on an ad.
-            }
-        });
-
-        bottomBanner.setAdListener(new AdListener() {
-            @Override
-            public void onAdLoaded() {
-                // Code to be executed when an ad finishes loading.
-            }
-
-            @Override
-            public void onAdFailedToLoad(LoadAdError adError) {
-                // Code to be executed when an ad request fails.
-            }
-
-            @Override
-            public void onAdOpened() {
-                // Code to be executed when an ad opens an overlay that
-                // covers the screen.
-            }
-
-            @Override
-            public void onAdClicked() {
-                // Code to be executed when the user clicks on an ad.
-            }
-
-            @Override
-            public void onAdLeftApplication() {
-                // Code to be executed when the user has left the app.
-            }
-
-            @Override
-            public void onAdClosed() {
-                // Code to be executed when the user is about to return
-                // to the app after tapping on an ad.
-            }
-        });
     }
 
     private void loadRecents() {
@@ -196,6 +110,5 @@ public class RecentFragment extends Fragment {
     public void onDestroy() {
         compositeDisposable.clear();
         super.onDestroy();
-        noInternetDialog.onDestroy();
     }
 }

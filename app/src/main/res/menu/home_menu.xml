@@ -6,8 +6,8 @@
     <item
         android:id="@+id/action_category"
         android:enabled="true"
-        android:icon="@drawable/ic_baseline_category_24"
-        android:title="Category"
+        android:icon="@drawable/ic_baseline_legend_toggle_24"
+        android:title="Legends"
         app:showAsAction="ifRoom" />
 
     <item

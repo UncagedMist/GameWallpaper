@@ -8,14 +8,6 @@
     android:background="@color/background"
     tools:context=".Fragments.SettingsFragment">
 
-    <com.google.android.gms.ads.AdView
-        android:id="@+id/aboveBanner"
-        android:layout_centerHorizontal="true"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        ads:adSize="BANNER"
-        ads:adUnitId="@string/BANNER_ID" />
-
     <TextView
         android:text="More Features will be added Soon"
         android:layout_centerInParent="true"
@@ -23,14 +15,5 @@
         android:layout_height="wrap_content"
         android:textSize="40sp"
         android:textAlignment="center"/>
-
-    <com.google.android.gms.ads.AdView
-        android:id="@+id/bottomBanner"
-        android:layout_centerHorizontal="true"
-        android:layout_alignParentBottom="true"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        ads:adSize="BANNER"
-        ads:adUnitId="@string/BANNER_ID" />
 
 </RelativeLayout>

@@ -53,17 +53,4 @@
 
     </LinearLayout>
 
-    <Space
-        android:layout_width="wrap_content"
-        android:layout_height="56dp" />
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/list"
-        android:layout_width="240dp"
-        android:layout_height="wrap_content" />
-
-    <Space
-        android:layout_width="wrap_content"
-        android:layout_height="30dp" />
-
 </LinearLayout>

@@ -8,34 +8,31 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
-import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.AdError;
 import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.AdView;
-import com.google.android.gms.ads.InterstitialAd;
+import com.google.android.gms.ads.FullScreenContentCallback;
 import com.google.android.gms.ads.LoadAdError;
+import com.google.android.gms.ads.interstitial.InterstitialAd;
+import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.squareup.picasso.Picasso;
 
-import am.appwise.components.ni.NoInternetDialog;
 import tbc.uncagedmist.gamewallpaper.Common.Common;
-import tbc.uncagedmist.gamewallpaper.Interface.ItemClickListener;
 import tbc.uncagedmist.gamewallpaper.ListWallpaperActivity;
 import tbc.uncagedmist.gamewallpaper.Model.CategoryItem;
 import tbc.uncagedmist.gamewallpaper.R;
 import tbc.uncagedmist.gamewallpaper.ViewHolder.CategoryViewHolder;
 
 public class CategoryFragment extends Fragment {
-
-    AdView aboveBanner, bottomBanner;
-
-    NoInternetDialog noInternetDialog;
 
     FirebaseDatabase database;
     DatabaseReference categoryBackground;
@@ -69,8 +66,8 @@ public class CategoryFragment extends Fragment {
 
                 holder.setItemClickListener((view, position1) -> {
 
-                    if (mInterstitialAd.isLoaded()) {
-                        mInterstitialAd.show();
+                    if (mInterstitialAd != null) {
+                        mInterstitialAd.show(getActivity());
                     }
                     else {
                         Common.CATEGORY_ID_SELECTED = adapter.getRef(position1).getKey();
@@ -88,17 +85,40 @@ public class CategoryFragment extends Fragment {
                 View itemView = LayoutInflater.from(parent.getContext())
                         .inflate(R.layout.layout_category_item,parent,false);
 
-                mInterstitialAd = new InterstitialAd(getContext());
-                mInterstitialAd.setAdUnitId(getContext().getResources().getString(R.string.FULL_SCREEN));
-                mInterstitialAd.loadAd(new AdRequest.Builder().build());
+                AdRequest adRequest = new AdRequest.Builder().build();
 
-                mInterstitialAd.setAdListener(new AdListener() {
-                    @Override
-                    public void onAdClosed() {
-                        mInterstitialAd.loadAd(new AdRequest.Builder().build());
-                    }
+                InterstitialAd.load(
+                        getContext(),
+                        getContext().getString(R.string.FULL_SCREEN),
+                        adRequest, new InterstitialAdLoadCallback() {
+                            @Override
+                            public void onAdLoaded(@NonNull InterstitialAd interstitialAd) {
+                                mInterstitialAd = interstitialAd;
 
-                });
+                                mInterstitialAd.setFullScreenContentCallback(new FullScreenContentCallback(){
+                                    @Override
+                                    public void onAdDismissedFullScreenContent() {
+                                        Log.d("TAG", "The ad was dismissed.");
+                                    }
+
+                                    @Override
+                                    public void onAdFailedToShowFullScreenContent(AdError adError) {
+                                        Log.d("TAG", "The ad failed to show.");
+                                    }
+
+                                    @Override
+                                    public void onAdShowedFullScreenContent() {
+                                        mInterstitialAd = null;
+                                        Log.d("TAG", "The ad was shown.");
+                                    }
+                                });
+                            }
+
+                            @Override
+                            public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
+                                mInterstitialAd = null;
+                            }
+                        });
 
                 return new CategoryViewHolder(itemView);
             }
@@ -118,97 +138,19 @@ public class CategoryFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_category, container, false);
 
-        noInternetDialog = new NoInternetDialog.Builder(getContext()).build();
-
         recyclerView = view.findViewById(R.id.recycler_category);
-        aboveBanner = view.findViewById(R.id.aboveBanner);
-        bottomBanner = view.findViewById(R.id.bottomBanner);
-
-        AdRequest adRequest = new AdRequest.Builder().build();
-
-        aboveBanner.loadAd(adRequest);
-        bottomBanner.loadAd(adRequest);
 
         recyclerView.setHasFixedSize(true);
 
         GridLayoutManager gridLayoutManager = new GridLayoutManager(getActivity(),2);
         recyclerView.setLayoutManager(gridLayoutManager);
 
-        setCategory();
-
-        adMethod();
+        if (Common.isConnectedToInternet(getContext()))
+            setCategory();
+        else
+            Toast.makeText(getContext(), "Please Connect to Internet...", Toast.LENGTH_SHORT).show();
 
         return view;
-    }
-
-    private void adMethod() {
-        aboveBanner.setAdListener(new AdListener() {
-            @Override
-            public void onAdLoaded() {
-                // Code to be executed when an ad finishes loading.
-            }
-
-            @Override
-            public void onAdFailedToLoad(LoadAdError adError) {
-                // Code to be executed when an ad request fails.
-            }
-
-            @Override
-            public void onAdOpened() {
-                // Code to be executed when an ad opens an overlay that
-                // covers the screen.
-            }
-
-            @Override
-            public void onAdClicked() {
-                // Code to be executed when the user clicks on an ad.
-            }
-
-            @Override
-            public void onAdLeftApplication() {
-                // Code to be executed when the user has left the app.
-            }
-
-            @Override
-            public void onAdClosed() {
-                // Code to be executed when the user is about to return
-                // to the app after tapping on an ad.
-            }
-        });
-
-        bottomBanner.setAdListener(new AdListener() {
-            @Override
-            public void onAdLoaded() {
-                // Code to be executed when an ad finishes loading.
-            }
-
-            @Override
-            public void onAdFailedToLoad(LoadAdError adError) {
-                // Code to be executed when an ad request fails.
-            }
-
-            @Override
-            public void onAdOpened() {
-                // Code to be executed when an ad opens an overlay that
-                // covers the screen.
-            }
-
-            @Override
-            public void onAdClicked() {
-                // Code to be executed when the user clicks on an ad.
-            }
-
-            @Override
-            public void onAdLeftApplication() {
-                // Code to be executed when the user has left the app.
-            }
-
-            @Override
-            public void onAdClosed() {
-                // Code to be executed when the user is about to return
-                // to the app after tapping on an ad.
-            }
-        });
     }
 
     private void setCategory() {
@@ -234,16 +176,11 @@ public class CategoryFragment extends Fragment {
         }
     }
 
-    @Override
-    public void onStop() {
-        if (adapter != null)
-            adapter.stopListening();
-        super.onStop();
-    }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        noInternetDialog.onDestroy();
+        if (adapter != null)
+            adapter.stopListening();
     }
 }

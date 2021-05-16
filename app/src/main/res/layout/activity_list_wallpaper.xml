@@ -16,7 +16,7 @@
 
         <include
             android:id="@+id/toolbar"
-            layout="@layout/app_bar_home"/>
+            layout="@layout/app_bar"/>
 
     </com.google.android.material.appbar.AppBarLayout>
 

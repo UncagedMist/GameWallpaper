@@ -1,7 +1,9 @@
 package tbc.uncagedmist.gamewallpaper.Adapter;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,9 +11,13 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.gms.ads.AdError;
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.InterstitialAd;
+import com.google.android.gms.ads.FullScreenContentCallback;
+import com.google.android.gms.ads.LoadAdError;
+import com.google.android.gms.ads.interstitial.InterstitialAd;
+import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
 import com.squareup.picasso.Picasso;
 
 import java.util.List;
@@ -44,17 +50,40 @@ public class MyRecyclerAdapter extends RecyclerView.Adapter<ListWallpaperViewHol
         int height = parent.getMeasuredHeight() / 2;
         itemView.setMinimumHeight(height);
 
-        mInterstitialAd = new InterstitialAd(context);
-        mInterstitialAd.setAdUnitId(context.getResources().getString(R.string.FULL_SCREEN));
-        mInterstitialAd.loadAd(new AdRequest.Builder().build());
+        AdRequest adRequest = new AdRequest.Builder().build();
 
-        mInterstitialAd.setAdListener(new AdListener() {
-            @Override
-            public void onAdClosed() {
-                mInterstitialAd.loadAd(new AdRequest.Builder().build());
-            }
+        InterstitialAd.load(
+                context,
+                context.getString(R.string.FULL_SCREEN),
+                adRequest, new InterstitialAdLoadCallback() {
+                    @Override
+                    public void onAdLoaded(@NonNull InterstitialAd interstitialAd) {
+                        mInterstitialAd = interstitialAd;
 
-        });
+                        mInterstitialAd.setFullScreenContentCallback(new FullScreenContentCallback(){
+                            @Override
+                            public void onAdDismissedFullScreenContent() {
+                                Log.d("TAG", "The ad was dismissed.");
+                            }
+
+                            @Override
+                            public void onAdFailedToShowFullScreenContent(AdError adError) {
+                                Log.d("TAG", "The ad failed to show.");
+                            }
+
+                            @Override
+                            public void onAdShowedFullScreenContent() {
+                                mInterstitialAd = null;
+                                Log.d("TAG", "The ad was shown.");
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
+                        mInterstitialAd = null;
+                    }
+                });
 
         return new ListWallpaperViewHolder(itemView);
     }
@@ -62,8 +91,8 @@ public class MyRecyclerAdapter extends RecyclerView.Adapter<ListWallpaperViewHol
     @Override
     public void onBindViewHolder(@NonNull final ListWallpaperViewHolder holder, final int position) {
 
-        if (mInterstitialAd.isLoaded()) {
-            mInterstitialAd.show();
+        if (mInterstitialAd != null) {
+            mInterstitialAd.show((Activity) context);
         }
         else {
             Picasso.get()

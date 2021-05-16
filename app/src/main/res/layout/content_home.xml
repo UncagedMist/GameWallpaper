@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:ads="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/back_bg"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context=".HomeActivity"
+    tools:showIn="@layout/app_bar_home">
+
+    <com.google.android.gms.ads.AdView
+        android:id="@+id/aboveBanner"
+        android:layout_centerHorizontal="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        ads:adSize="BANNER"
+        ads:adUnitId="@string/BANNER_ID" />
+
+    <FrameLayout
+        android:id="@+id/main_frame"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/aboveBanner"
+        android:layout_above="@id/bottomBanner"
+        android:layout_weight="1"/>
+
+    <com.google.android.gms.ads.AdView
+        android:id="@+id/bottomBanner"
+        android:layout_centerHorizontal="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/customBottomBar"
+        ads:adSize="BANNER"
+        ads:adUnitId="@string/BANNER_ID" />
+
+    <tbc.uncagedmist.gamewallpaper.Utility.CurvedBottomNavigationView
+        android:layout_gravity="bottom"
+        android:id="@+id/customBottomBar"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        app:menu="@menu/home_menu"
+        android:layout_alignParentBottom="true"/>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab"
+        android:layout_alignParentBottom="true"
+        android:layout_gravity="bottom|center"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        app:tint="@android:color/white"
+        app:backgroundTint="@color/color1"
+        android:layout_marginBottom="35dp"/>
+
+</RelativeLayout>

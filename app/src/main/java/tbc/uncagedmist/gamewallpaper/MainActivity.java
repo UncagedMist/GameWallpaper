@@ -7,10 +7,8 @@ import android.content.IntentSender;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.Button;
 import android.widget.Toast;
 
 import com.google.android.play.core.appupdate.AppUpdateInfo;
@@ -18,15 +16,12 @@ import com.google.android.play.core.appupdate.AppUpdateManager;
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory;
 import com.google.android.play.core.install.model.AppUpdateType;
 import com.google.android.play.core.install.model.UpdateAvailability;
-import com.google.android.play.core.tasks.OnSuccessListener;
 import com.google.android.play.core.tasks.Task;
 
-import am.appwise.components.ni.NoInternetDialog;
 import tbc.uncagedmist.gamewallpaper.Common.Common;
 
 public class MainActivity extends AppCompatActivity {
 
-    NoInternetDialog noInternetDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,8 +35,6 @@ public class MainActivity extends AppCompatActivity {
         checkAppUpdate();
 
         setContentView(R.layout.activity_main);
-
-        noInternetDialog = new NoInternetDialog.Builder(MainActivity.this).build();
 
         new Handler().postDelayed(() -> {
 
@@ -75,11 +68,5 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        noInternetDialog.onDestroy();
     }
 }

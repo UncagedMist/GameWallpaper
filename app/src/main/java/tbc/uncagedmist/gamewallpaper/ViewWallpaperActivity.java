@@ -3,13 +3,13 @@ package tbc.uncagedmist.gamewallpaper;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.app.ActivityCompat;
 
 import android.Manifest;
 import android.app.AlertDialog;
 import android.app.WallpaperManager;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -17,6 +17,7 @@ import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -26,11 +27,14 @@ import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.ads.AdError;
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
-import com.google.android.gms.ads.InterstitialAd;
+import com.google.android.gms.ads.FullScreenContentCallback;
 import com.google.android.gms.ads.LoadAdError;
+import com.google.android.gms.ads.interstitial.InterstitialAd;
+import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -46,27 +50,18 @@ import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
-import com.stepstone.apprating.AppRatingDialog;
-import com.stepstone.apprating.listener.RatingDialogListener;
-
-import org.jetbrains.annotations.NotNull;
+import com.willy.ratingbar.ScaleRatingBar;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import am.appwise.components.ni.NoInternetDialog;
 import dmax.dialog.SpotsDialog;
 import io.reactivex.Observable;
-import io.reactivex.ObservableEmitter;
-import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.Action;
-import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 import tbc.uncagedmist.gamewallpaper.Common.Common;
 import tbc.uncagedmist.gamewallpaper.Database.DataSource.RecentsRepository;
@@ -80,11 +75,10 @@ import tbc.uncagedmist.gamewallpaper.Model.Rating;
 import tbc.uncagedmist.gamewallpaper.Model.WallpaperItem;
 import tbc.uncagedmist.gamewallpaper.Utility.SaveImageHelper;
 
-public class ViewWallpaperActivity extends AppCompatActivity implements RatingDialogListener {
+public class ViewWallpaperActivity extends AppCompatActivity {
 
     AdView aboveBanner;
-
-    NoInternetDialog noInternetDialog;
+    float rate;
 
     public static final int  PERMISSION_REQUEST_CODE = 21;
 
@@ -178,19 +172,40 @@ public class ViewWallpaperActivity extends AppCompatActivity implements RatingDi
 
         setContentView(R.layout.activity_view_wallpaper);
 
-        noInternetDialog = new NoInternetDialog.Builder(ViewWallpaperActivity.this).build();
+        AdRequest adRequest = new AdRequest.Builder().build();
 
-        mInterstitialAd = new InterstitialAd(ViewWallpaperActivity.this);
-        mInterstitialAd.setAdUnitId(getResources().getString(R.string.FULL_SCREEN));
-        mInterstitialAd.loadAd(new AdRequest.Builder().build());
+        InterstitialAd.load(
+                ViewWallpaperActivity.this,
+                getString(R.string.FULL_SCREEN),
+                adRequest, new InterstitialAdLoadCallback() {
+                    @Override
+                    public void onAdLoaded(@NonNull InterstitialAd interstitialAd) {
+                        mInterstitialAd = interstitialAd;
 
-        mInterstitialAd.setAdListener(new AdListener() {
-            @Override
-            public void onAdClosed() {
-                mInterstitialAd.loadAd(new AdRequest.Builder().build());
-            }
+                        mInterstitialAd.setFullScreenContentCallback(new FullScreenContentCallback(){
+                            @Override
+                            public void onAdDismissedFullScreenContent() {
+                                Log.d("TAG", "The ad was dismissed.");
+                            }
 
-        });
+                            @Override
+                            public void onAdFailedToShowFullScreenContent(AdError adError) {
+                                Log.d("TAG", "The ad failed to show.");
+                            }
+
+                            @Override
+                            public void onAdShowedFullScreenContent() {
+                                mInterstitialAd = null;
+                                Log.d("TAG", "The ad was shown.");
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
+                        mInterstitialAd = null;
+                    }
+                });
 
         compositeDisposable = new CompositeDisposable();
         //for recent
@@ -221,8 +236,6 @@ public class ViewWallpaperActivity extends AppCompatActivity implements RatingDi
         txtDownloads = findViewById(R.id.txtDownloads);
         aboveBanner = findViewById(R.id.bottomBanner);
 
-        AdRequest adRequest = new AdRequest.Builder().build();
-
         aboveBanner.loadAd(adRequest);
 
         txtWallpaperName.setText(Common.CATEGORY_SELECTED);
@@ -244,8 +257,8 @@ public class ViewWallpaperActivity extends AppCompatActivity implements RatingDi
         getWallpaperRating(Common.select_background.categoryId);
 
         fabFav.setOnClickListener(view -> {
-            if (mInterstitialAd.isLoaded()) {
-                mInterstitialAd.show();
+            if (mInterstitialAd != null) {
+                mInterstitialAd.show(ViewWallpaperActivity.this);
             }
             else {
                 addToFavourites();
@@ -267,8 +280,8 @@ public class ViewWallpaperActivity extends AppCompatActivity implements RatingDi
         llWallpaper = findViewById(R.id.ll_setAs);
 
         llWallpaper.setOnClickListener(view -> {
-            if (mInterstitialAd.isLoaded()) {
-                mInterstitialAd.show();
+            if (mInterstitialAd != null) {
+                mInterstitialAd.show(ViewWallpaperActivity.this);
             }
             else
                 Picasso.get()
@@ -286,9 +299,8 @@ public class ViewWallpaperActivity extends AppCompatActivity implements RatingDi
                 }, PERMISSION_REQUEST_CODE);
             }
             else    {
-
-                if (mInterstitialAd.isLoaded()) {
-                    mInterstitialAd.show();
+                if (mInterstitialAd != null) {
+                    mInterstitialAd.show(ViewWallpaperActivity.this);
                 }
                 else {
                     AlertDialog dialog = new SpotsDialog(ViewWallpaperActivity.this);
@@ -312,8 +324,8 @@ public class ViewWallpaperActivity extends AppCompatActivity implements RatingDi
 
         ll_rate = findViewById(R.id.ll_rate);
         ll_rate.setOnClickListener(view -> {
-            if (mInterstitialAd.isLoaded()) {
-                mInterstitialAd.show();
+            if (mInterstitialAd != null) {
+                mInterstitialAd.show(ViewWallpaperActivity.this);
             }
             else
                 showRatingDialog();
@@ -343,11 +355,6 @@ public class ViewWallpaperActivity extends AppCompatActivity implements RatingDi
             @Override
             public void onAdClicked() {
                 // Code to be executed when the user clicks on an ad.
-            }
-
-            @Override
-            public void onAdLeftApplication() {
-                // Code to be executed when the user has left the app.
             }
 
             @Override
@@ -386,16 +393,51 @@ public class ViewWallpaperActivity extends AppCompatActivity implements RatingDi
     }
 
     private void showRatingDialog() {
-        new AppRatingDialog.Builder()
-                .setPositiveButtonText("Submit")
-                .setNegativeButtonText("Cancel")
-                .setDefaultRating(1)
-                .setNumberOfStars(5)
-                .setTitle("Rate this Wallpaper")
-                .setTitleTextColor(R.color.colorPrimary)
-                .setWindowAnimation(R.style.RatingDialogFadeAnim)
-                .create(ViewWallpaperActivity.this)
-                .show();
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(ViewWallpaperActivity.this);
+        alertDialog.setTitle("Rate this Wallpaper");
+        alertDialog.setMessage("Tell others what do you think of this wallpaper");
+        alertDialog.setCancelable(false);
+
+        LayoutInflater inflater = LayoutInflater.from(this);
+        View layout_rate = inflater.inflate(R.layout.rating_layout,null);
+
+        ScaleRatingBar scaleRatingBar = layout_rate.findViewById(R.id.simpleRatingBar);
+
+        scaleRatingBar.setOnRatingChangeListener((ratingBar, rating, fromUser) ->
+                rate = rating);
+
+        alertDialog.setView(layout_rate);
+
+        alertDialog.setPositiveButton("Rate ME", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int which) {
+
+                dialogInterface.dismiss();
+                rateWallpaper((int) rate);
+
+            }
+        });
+        alertDialog.setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int which) {
+                dialogInterface.dismiss();
+            }
+        });
+        alertDialog.show();
+    }
+
+    private void rateWallpaper(int value) {
+        Rating rating = new Rating(
+                Common.select_background.getCategoryId(),
+                String.valueOf(value));
+
+        ratingTbl.push()
+                .setValue(rating).addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                Toast.makeText(ViewWallpaperActivity.this, "Thank You For Your FeedBack !!!", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
 
@@ -542,26 +584,5 @@ public class ViewWallpaperActivity extends AppCompatActivity implements RatingDi
         Picasso.get().cancelRequest(target);
         compositeDisposable.clear();
         super.onDestroy();
-        noInternetDialog.onDestroy();
-    }
-
-    @Override
-    public void onNegativeButtonClicked() {
-
-    }
-
-    @Override
-    public void onPositiveButtonClicked(int value, @NotNull String comment) {
-        Rating rating = new Rating(
-                Common.select_background.getCategoryId(),
-                String.valueOf(value));
-
-        ratingTbl.push()
-                .setValue(rating).addOnCompleteListener(new OnCompleteListener<Void>() {
-            @Override
-            public void onComplete(@NonNull Task<Void> task) {
-                Toast.makeText(ViewWallpaperActivity.this, "Thank You For Your FeedBack !!!", Toast.LENGTH_SHORT).show();
-            }
-        });
     }
 }

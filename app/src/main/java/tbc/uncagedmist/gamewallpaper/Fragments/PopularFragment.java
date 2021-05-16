@@ -8,34 +8,32 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
-import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.AdError;
 import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.FullScreenContentCallback;
 import com.google.android.gms.ads.LoadAdError;
+import com.google.android.gms.ads.interstitial.InterstitialAd;
+import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.squareup.picasso.Picasso;
 
-import am.appwise.components.ni.NoInternetDialog;
 import tbc.uncagedmist.gamewallpaper.Common.Common;
-import tbc.uncagedmist.gamewallpaper.Interface.ItemClickListener;
 import tbc.uncagedmist.gamewallpaper.Model.WallpaperItem;
 import tbc.uncagedmist.gamewallpaper.R;
 import tbc.uncagedmist.gamewallpaper.ViewHolder.ListWallpaperViewHolder;
 import tbc.uncagedmist.gamewallpaper.ViewWallpaperActivity;
 
 public class PopularFragment extends Fragment {
-
-    AdView aboveBanner, bottomBanner;
-
-    NoInternetDialog noInternetDialog;
 
     private static PopularFragment INSTANCE = null;
 
@@ -46,6 +44,8 @@ public class PopularFragment extends Fragment {
 
     FirebaseRecyclerOptions<WallpaperItem> options;
     FirebaseRecyclerAdapter<WallpaperItem, ListWallpaperViewHolder> adapter;
+
+    private InterstitialAd mInterstitialAd;
 
     public PopularFragment() {
         database = FirebaseDatabase.getInstance();
@@ -65,12 +65,15 @@ public class PopularFragment extends Fragment {
                         .load(model.getImageUrl())
                         .into(holder.wallpaper);
 
-                holder.setItemClickListener(new ItemClickListener() {
-                    @Override
-                    public void onClick(View view, int position) {
+                holder.setItemClickListener((view, position1) -> {
+
+                    if (mInterstitialAd != null) {
+                        mInterstitialAd.show(getActivity());
+                    }
+                    else {
                         Intent intent = new Intent(getActivity(), ViewWallpaperActivity.class);
                         Common.select_background = model;
-                        Common.select_background_key = adapter.getRef(position).getKey();
+                        Common.select_background_key = adapter.getRef(position1).getKey();
                         startActivity(intent);
                     }
                 });
@@ -85,6 +88,41 @@ public class PopularFragment extends Fragment {
 
                 int height = parent.getMeasuredHeight() / 2;
                 itemView.setMinimumHeight(height);
+
+                AdRequest adRequest = new AdRequest.Builder().build();
+
+                InterstitialAd.load(
+                        getContext(),
+                        getContext().getString(R.string.FULL_SCREEN),
+                        adRequest, new InterstitialAdLoadCallback() {
+                            @Override
+                            public void onAdLoaded(@NonNull InterstitialAd interstitialAd) {
+                                mInterstitialAd = interstitialAd;
+
+                                mInterstitialAd.setFullScreenContentCallback(new FullScreenContentCallback(){
+                                    @Override
+                                    public void onAdDismissedFullScreenContent() {
+                                        Log.d("TAG", "The ad was dismissed.");
+                                    }
+
+                                    @Override
+                                    public void onAdFailedToShowFullScreenContent(AdError adError) {
+                                        Log.d("TAG", "The ad failed to show.");
+                                    }
+
+                                    @Override
+                                    public void onAdShowedFullScreenContent() {
+                                        mInterstitialAd = null;
+                                        Log.d("TAG", "The ad was shown.");
+                                    }
+                                });
+                            }
+
+                            @Override
+                            public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
+                                mInterstitialAd = null;
+                            }
+                        });
 
                 return new ListWallpaperViewHolder(itemView);
             }
@@ -104,17 +142,7 @@ public class PopularFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_popular, container, false);
 
-        noInternetDialog = new NoInternetDialog.Builder(getContext()).build();
-
         recyclerView = view.findViewById(R.id.recycler_trending);
-
-        aboveBanner = view.findViewById(R.id.aboveBanner);
-        bottomBanner = view.findViewById(R.id.bottomBanner);
-
-        AdRequest adRequest = new AdRequest.Builder().build();
-
-        aboveBanner.loadAd(adRequest);
-        bottomBanner.loadAd(adRequest);
 
         recyclerView.setHasFixedSize(true);
 
@@ -123,81 +151,12 @@ public class PopularFragment extends Fragment {
         linearLayoutManager.setReverseLayout(true);
         recyclerView.setLayoutManager(linearLayoutManager);
 
-        loadTrendingList();
-
-        adMethod();
+        if (Common.isConnectedToInternet(getContext()))
+            loadTrendingList();
+        else
+            Toast.makeText(getContext(), "Please Connect to Internet...", Toast.LENGTH_SHORT).show();
 
         return view;
-    }
-
-    private void adMethod() {
-        aboveBanner.setAdListener(new AdListener() {
-            @Override
-            public void onAdLoaded() {
-                // Code to be executed when an ad finishes loading.
-            }
-
-            @Override
-            public void onAdFailedToLoad(LoadAdError adError) {
-                // Code to be executed when an ad request fails.
-            }
-
-            @Override
-            public void onAdOpened() {
-                // Code to be executed when an ad opens an overlay that
-                // covers the screen.
-            }
-
-            @Override
-            public void onAdClicked() {
-                // Code to be executed when the user clicks on an ad.
-            }
-
-            @Override
-            public void onAdLeftApplication() {
-                // Code to be executed when the user has left the app.
-            }
-
-            @Override
-            public void onAdClosed() {
-                // Code to be executed when the user is about to return
-                // to the app after tapping on an ad.
-            }
-        });
-
-        bottomBanner.setAdListener(new AdListener() {
-            @Override
-            public void onAdLoaded() {
-                // Code to be executed when an ad finishes loading.
-            }
-
-            @Override
-            public void onAdFailedToLoad(LoadAdError adError) {
-                // Code to be executed when an ad request fails.
-            }
-
-            @Override
-            public void onAdOpened() {
-                // Code to be executed when an ad opens an overlay that
-                // covers the screen.
-            }
-
-            @Override
-            public void onAdClicked() {
-                // Code to be executed when the user clicks on an ad.
-            }
-
-            @Override
-            public void onAdLeftApplication() {
-                // Code to be executed when the user has left the app.
-            }
-
-            @Override
-            public void onAdClosed() {
-                // Code to be executed when the user is about to return
-                // to the app after tapping on an ad.
-            }
-        });
     }
 
     private void loadTrendingList() {
@@ -215,14 +174,6 @@ public class PopularFragment extends Fragment {
     }
 
     @Override
-    public void onStop() {
-        if (adapter != null)    {
-            adapter.stopListening();
-        }
-        super.onStop();
-    }
-
-    @Override
     public void onResume() {
         super.onResume();
 
@@ -234,6 +185,8 @@ public class PopularFragment extends Fragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        noInternetDialog.onDestroy();
+        if (adapter != null)    {
+            adapter.stopListening();
+        }
     }
 }
