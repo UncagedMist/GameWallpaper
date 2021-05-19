@@ -185,7 +185,22 @@ public class HomeActivity extends AppCompatActivity
             drawer.closeDrawer(GravityCompat.START);
         }
         else {
-            exit();
+            new FancyAlertDialog.Builder(HomeActivity.this)
+                    .setTitle("Apex Legends Wallpaper")
+                    .setBackgroundColor(Color.parseColor("#303F9F"))  //Don't pass R.color.colorvalue
+                    .setMessage("Support us by downloading our other apps!")
+                    .setNegativeBtnText("Don't")
+                    .setPositiveBtnBackground(Color.parseColor("#FF4081"))  //Don't pass R.color.colorvalue
+                    .setPositiveBtnText("Support")
+                    .setNegativeBtnBackground(Color.parseColor("#FFA9A7A8"))  //Don't pass R.color.colorvalue
+                    .setAnimation(Animation.POP)
+                    .isCancellable(true)
+                    .setIcon(R.drawable.ic_star_border_black_24dp, Icon.Visible)
+                    .OnPositiveClicked(() ->
+                            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=tbc.uncagedmist.apexlegendswallpapers"))))
+                    .OnNegativeClicked(() -> {
+                    })
+                    .build();
         }
     }
 
