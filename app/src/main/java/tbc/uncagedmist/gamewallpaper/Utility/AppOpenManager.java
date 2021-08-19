@@ -18,13 +18,14 @@ import com.google.android.gms.ads.appopen.AppOpenAd;
 import java.util.Date;
 
 import tbc.uncagedmist.gamewallpaper.Common.MyApplicationClass;
+import tbc.uncagedmist.gamewallpaper.R;
 
 import static androidx.lifecycle.Lifecycle.Event.ON_START;
 
 public class AppOpenManager implements LifecycleObserver, Application.ActivityLifecycleCallbacks {
 
     private static final String LOG_TAG = "AppOpenManager";
-    private static final String AD_UNIT_ID = "ca-app-pub-7920815986886474/6327665002";
+
     private AppOpenAd appOpenAd = null;
 
     private AppOpenAd.AppOpenAdLoadCallback loadCallback;
@@ -71,7 +72,9 @@ public class AppOpenManager implements LifecycleObserver, Application.ActivityLi
                 };
         AdRequest request = getAdRequest();
         AppOpenAd.load(
-                myApplication, AD_UNIT_ID, request,
+                myApplication,
+                currentActivity.getString(R.string.APP_OPEN),
+                request,
                 AppOpenAd.APP_OPEN_AD_ORIENTATION_PORTRAIT, loadCallback);
     }
 

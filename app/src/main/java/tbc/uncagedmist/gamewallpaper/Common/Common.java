@@ -4,20 +4,18 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
-import tbc.uncagedmist.gamewallpaper.Model.WallpaperItem;
+import tbc.uncagedmist.gamewallpaper.Model.Wallpapers;
 
 public class Common {
-    public static final String STR_CATEGORY_BACKGROUND = "CategoryBackground";
+    public static final String FB_DB_NAME = "ApexLegends";
 
-    public static String CATEGORY_SELECTED;
-    public static String Current_Description;
+    public static final int ITEM_PER_AD = 4;
 
-    public static String STR_WALLPAPER = "Wallpapers";
+    public static String CURRENT_WALLPAPER_ID;
     public static String CATEGORY_ID_SELECTED;
 
-    public static String select_background_key;
-
-    public static WallpaperItem select_background = new WallpaperItem();
+    public static String selected_background_key;
+    public static Wallpapers selected_background = new Wallpapers();
 
     public static boolean IS_FAV = false;
 

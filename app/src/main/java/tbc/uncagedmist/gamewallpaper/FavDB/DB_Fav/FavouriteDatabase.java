@@ -1,4 +1,4 @@
-package tbc.uncagedmist.gamewallpaper.FavDB.LocalDB;
+package tbc.uncagedmist.gamewallpaper.FavDB.DB_Fav;
 
 import android.content.Context;
 
@@ -8,22 +8,22 @@ import androidx.room.RoomDatabase;
 
 import tbc.uncagedmist.gamewallpaper.FavDB.Favourites;
 
-@Database(entities = Favourites.class,version = LocalDatabase.DATABASE_VERSION)
-public abstract class LocalDatabase extends RoomDatabase {
+@Database(entities = Favourites.class,version = FavouriteDatabase.DATABASE_VERSION)
+public abstract class FavouriteDatabase extends RoomDatabase {
 
     public static final int DATABASE_VERSION = 1;
-    public static final String DATABASE_NAME = "FAV_DB";
+    public static final String DATABASE_NAME = "Fav_DB";
 
     public abstract FavouritesDAO favouritesDAO();
 
-    public static LocalDatabase instance;
+    public static FavouriteDatabase instance;
 
-    public static LocalDatabase getInstance(Context context)    {
+    public static FavouriteDatabase getInstance(Context context)    {
 
         if (instance == null)   {
             instance = Room.databaseBuilder(
                     context,
-                    LocalDatabase.class,
+                    FavouriteDatabase.class,
                     DATABASE_NAME).fallbackToDestructiveMigration()
                     .build();
         }

@@ -1,5 +1,4 @@
-package tbc.uncagedmist.gamewallpaper.FavDB.LocalDB;
-
+package tbc.uncagedmist.gamewallpaper.FavDB.DB_Fav;
 
 import java.util.List;
 

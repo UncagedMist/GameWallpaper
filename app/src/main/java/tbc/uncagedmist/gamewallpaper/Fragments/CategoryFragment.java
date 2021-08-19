@@ -1,10 +1,15 @@
 package tbc.uncagedmist.gamewallpaper.Fragments;
 
+import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -24,11 +29,11 @@ import com.google.android.gms.ads.interstitial.InterstitialAd;
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
 import tbc.uncagedmist.gamewallpaper.Common.Common;
-import tbc.uncagedmist.gamewallpaper.ListWallpaperActivity;
-import tbc.uncagedmist.gamewallpaper.Model.CategoryItem;
+import tbc.uncagedmist.gamewallpaper.Model.Wallpapers;
 import tbc.uncagedmist.gamewallpaper.R;
 import tbc.uncagedmist.gamewallpaper.ViewHolder.CategoryViewHolder;
 
@@ -37,88 +42,75 @@ public class CategoryFragment extends Fragment {
     FirebaseDatabase database;
     DatabaseReference categoryBackground;
 
-    FirebaseRecyclerOptions<CategoryItem> options;
-    FirebaseRecyclerAdapter<CategoryItem, CategoryViewHolder> adapter;
+    FirebaseRecyclerOptions<Wallpapers> options;
+    FirebaseRecyclerAdapter<Wallpapers, CategoryViewHolder> adapter;
 
+    @SuppressLint("StaticFieldLeak")
     private static CategoryFragment INSTANCE = null;
 
     RecyclerView recyclerView;
 
     private InterstitialAd mInterstitialAd;
 
+    Context context;
+
+    @Override
+    public void onAttach(@NonNull Activity activity) {
+        context = activity;
+        super.onAttach(activity);
+    }
+
     public CategoryFragment() {
         database = FirebaseDatabase.getInstance();
-        categoryBackground = database.getReference(Common.STR_CATEGORY_BACKGROUND);
+        categoryBackground = database.getReference(Common.FB_DB_NAME);
 
-        options = new FirebaseRecyclerOptions.Builder<CategoryItem>()
-                .setQuery(categoryBackground,CategoryItem.class)
+        options = new FirebaseRecyclerOptions.Builder<Wallpapers>()
+                .setQuery(categoryBackground,Wallpapers.class)
                 .build();
 
-        adapter = new FirebaseRecyclerAdapter<CategoryItem, CategoryViewHolder>(options) {
+        adapter = new FirebaseRecyclerAdapter<Wallpapers, CategoryViewHolder>(options) {
             @Override
-            protected void onBindViewHolder(@NonNull final CategoryViewHolder holder, int position, @NonNull final CategoryItem model) {
+            protected void onBindViewHolder(@NonNull CategoryViewHolder holder, int position, @NonNull Wallpapers model) {
 
+                holder.progressBar.setVisibility(View.VISIBLE);
                 Picasso.get()
                         .load(model.getImageLink())
-                        .into(holder.background_image);
+                        .into(holder.wallpaperImage, new Callback() {
+                            @Override
+                            public void onSuccess() {
+                                holder.progressBar.setVisibility(View.GONE);
+                            }
 
-                holder.category_name.setText(model.getName());
+                            @Override
+                            public void onError(Exception e) {
+                                Toast.makeText(getContext(), ""+e.getMessage(), Toast.LENGTH_SHORT).show();
+                            }
+                        });
 
                 holder.setItemClickListener((view, position1) -> {
-
                     if (mInterstitialAd != null) {
-                        mInterstitialAd.show(getActivity());
+                        mInterstitialAd.show((Activity) context);
                     }
                     else {
-                        Common.CATEGORY_ID_SELECTED = adapter.getRef(position1).getKey();
-                        Common.CATEGORY_SELECTED = model.getName();
-                        Common.Current_Description = model.getDesc();
-                        startActivity(new Intent(getActivity(), ListWallpaperActivity.class));
+                        ViewWallpaperFragment viewWallpaperFragment = new ViewWallpaperFragment();
+                        FragmentTransaction transaction = ((AppCompatActivity)context)
+                                .getSupportFragmentManager().beginTransaction();
+
+                        Common.selected_background = model;
+                        Common.selected_background_key = adapter.getRef(position).getKey();
+
+                        transaction.replace(R.id.main_frame,viewWallpaperFragment).commit();
                     }
                 });
-
             }
 
             @NonNull
             @Override
             public CategoryViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
                 View itemView = LayoutInflater.from(parent.getContext())
-                        .inflate(R.layout.layout_category_item,parent,false);
+                        .inflate(R.layout.layout_wallpaper_item,parent,false);
 
-                AdRequest adRequest = new AdRequest.Builder().build();
-
-                InterstitialAd.load(
-                        getContext(),
-                        getContext().getString(R.string.FULL_SCREEN),
-                        adRequest, new InterstitialAdLoadCallback() {
-                            @Override
-                            public void onAdLoaded(@NonNull InterstitialAd interstitialAd) {
-                                mInterstitialAd = interstitialAd;
-
-                                mInterstitialAd.setFullScreenContentCallback(new FullScreenContentCallback(){
-                                    @Override
-                                    public void onAdDismissedFullScreenContent() {
-                                        Log.d("TAG", "The ad was dismissed.");
-                                    }
-
-                                    @Override
-                                    public void onAdFailedToShowFullScreenContent(AdError adError) {
-                                        Log.d("TAG", "The ad failed to show.");
-                                    }
-
-                                    @Override
-                                    public void onAdShowedFullScreenContent() {
-                                        mInterstitialAd = null;
-                                        Log.d("TAG", "The ad was shown.");
-                                    }
-                                });
-                            }
-
-                            @Override
-                            public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
-                                mInterstitialAd = null;
-                            }
-                        });
+                loadFullscreen();
 
                 return new CategoryViewHolder(itemView);
             }
@@ -142,13 +134,15 @@ public class CategoryFragment extends Fragment {
 
         recyclerView.setHasFixedSize(true);
 
-        GridLayoutManager gridLayoutManager = new GridLayoutManager(getActivity(),2);
+        GridLayoutManager gridLayoutManager = new GridLayoutManager(context,2);
         recyclerView.setLayoutManager(gridLayoutManager);
 
-        if (Common.isConnectedToInternet(getContext()))
+        if (Common.isConnectedToInternet(context)) {
             setCategory();
+        }
         else
             Toast.makeText(getContext(), "Please Connect to Internet...", Toast.LENGTH_SHORT).show();
+
 
         return view;
     }
@@ -183,4 +177,43 @@ public class CategoryFragment extends Fragment {
         if (adapter != null)
             adapter.stopListening();
     }
+
+    private void loadFullscreen() {
+        AdRequest adRequest = new AdRequest.Builder().build();
+
+        InterstitialAd.load(
+                context,
+                context.getString(R.string.FULL_SCREEN),
+                adRequest, new InterstitialAdLoadCallback() {
+                    @Override
+                    public void onAdLoaded(@NonNull InterstitialAd interstitialAd) {
+                        mInterstitialAd = interstitialAd;
+
+                        mInterstitialAd.setFullScreenContentCallback(
+                                new FullScreenContentCallback(){
+                                    @Override
+                                    public void onAdDismissedFullScreenContent() {
+                                        Log.d("TAG", "The ad was dismissed.");
+                                    }
+
+                                    @Override
+                                    public void onAdFailedToShowFullScreenContent(AdError adError) {
+                                        Log.d("TAG", "The ad failed to show.");
+                                    }
+
+                                    @Override
+                                    public void onAdShowedFullScreenContent() {
+                                        mInterstitialAd = null;
+                                        Log.d("TAG", "The ad was shown.");
+                                    }
+                                });
+                    }
+
+                    @Override
+                    public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
+                        mInterstitialAd = null;
+                    }
+                });
+    }
+
 }

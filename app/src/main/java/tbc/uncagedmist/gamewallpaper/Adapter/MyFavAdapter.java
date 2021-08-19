@@ -7,8 +7,11 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.gms.ads.AdError;
@@ -17,18 +20,19 @@ import com.google.android.gms.ads.FullScreenContentCallback;
 import com.google.android.gms.ads.LoadAdError;
 import com.google.android.gms.ads.interstitial.InterstitialAd;
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
+import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
 import tbc.uncagedmist.gamewallpaper.Common.Common;
 import tbc.uncagedmist.gamewallpaper.FavDB.Favourites;
-import tbc.uncagedmist.gamewallpaper.Model.WallpaperItem;
+import tbc.uncagedmist.gamewallpaper.Fragments.ViewWallpaperFragment;
+import tbc.uncagedmist.gamewallpaper.Model.Wallpapers;
 import tbc.uncagedmist.gamewallpaper.R;
-import tbc.uncagedmist.gamewallpaper.ViewHolder.ListWallpaperViewHolder;
-import tbc.uncagedmist.gamewallpaper.ViewWallpaperActivity;
+import tbc.uncagedmist.gamewallpaper.ViewHolder.CategoryViewHolder;
 
-public class MyFavAdapter extends RecyclerView.Adapter<ListWallpaperViewHolder> {
+public class MyFavAdapter extends RecyclerView.Adapter<CategoryViewHolder> {
 
     private Context context;
     private List<Favourites> favourites;
@@ -42,13 +46,62 @@ public class MyFavAdapter extends RecyclerView.Adapter<ListWallpaperViewHolder> 
 
     @NonNull
     @Override
-    public ListWallpaperViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public CategoryViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View itemView = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.layout_wallpaper_item,parent,false);
 
         int height = parent.getMeasuredHeight() / 2;
         itemView.setMinimumHeight(height);
 
+        loadFullscreen();
+
+        return new CategoryViewHolder(itemView);
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull final CategoryViewHolder holder, final int position) {
+
+        if (mInterstitialAd != null) {
+            mInterstitialAd.show((Activity) context);
+        }
+        else {
+            holder.progressBar.setVisibility(View.VISIBLE);
+            Picasso.get()
+                    .load(favourites.get(position).getImageLink())
+                    .into(holder.wallpaperImage, new Callback() {
+                        @Override
+                        public void onSuccess() {
+                            holder.progressBar.setVisibility(View.GONE);
+                        }
+
+                        @Override
+                        public void onError(Exception e) {
+                            Toast.makeText(context, ""+e.getMessage(), Toast.LENGTH_SHORT).show();
+                        }
+                    });
+
+            holder.setItemClickListener((view, position1) -> {
+                ViewWallpaperFragment viewWallpaperFragment = new ViewWallpaperFragment();
+                FragmentTransaction transaction = ((AppCompatActivity)context)
+                        .getSupportFragmentManager().beginTransaction();
+
+                Wallpapers wallpapers = new Wallpapers();
+                wallpapers.setImageLink(favourites.get(position1).getImageLink());
+                Common.selected_background = wallpapers;
+                Common.selected_background_key = favourites.get(position1).getKey();
+
+                transaction.replace(R.id.main_frame,viewWallpaperFragment).commit();
+
+            });
+        }
+    }
+
+    @Override
+    public int getItemCount() {
+        return favourites.size();
+    }
+
+    private void loadFullscreen() {
         AdRequest adRequest = new AdRequest.Builder().build();
 
         InterstitialAd.load(
@@ -83,36 +136,5 @@ public class MyFavAdapter extends RecyclerView.Adapter<ListWallpaperViewHolder> 
                         mInterstitialAd = null;
                     }
                 });
-
-        return new ListWallpaperViewHolder(itemView);
-    }
-
-    @Override
-    public void onBindViewHolder(@NonNull final ListWallpaperViewHolder holder, final int position) {
-
-        if (mInterstitialAd != null) {
-            mInterstitialAd.show((Activity) context);
-        }
-        else {
-            Picasso.get()
-                    .load(favourites.get(position).getImageLink())
-                    .into(holder.wallpaper);
-
-            holder.setItemClickListener((view, position1) -> {
-                Intent intent = new Intent(context, ViewWallpaperActivity.class);
-                WallpaperItem wallpaperItem = new WallpaperItem();
-                wallpaperItem.setCategoryId(favourites.get(position1).getCategoryId());
-                wallpaperItem.setImageUrl(favourites.get(position1).getImageLink());
-                Common.select_background = wallpaperItem;
-                Common.select_background_key = favourites.get(position1).getKey();
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                context.startActivity(intent);
-            });
-        }
-    }
-
-    @Override
-    public int getItemCount() {
-        return favourites.size();
     }
 }

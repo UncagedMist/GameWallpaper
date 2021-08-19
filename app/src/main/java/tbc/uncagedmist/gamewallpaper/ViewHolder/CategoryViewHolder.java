@@ -2,17 +2,18 @@ package tbc.uncagedmist.gamewallpaper.ViewHolder;
 
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.TextView;
+import android.widget.ProgressBar;
 
 import androidx.recyclerview.widget.RecyclerView;
 
 import tbc.uncagedmist.gamewallpaper.Interface.ItemClickListener;
 import tbc.uncagedmist.gamewallpaper.R;
 
-public class CategoryViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+public class CategoryViewHolder extends RecyclerView.ViewHolder
+        implements View.OnClickListener {
 
-    public TextView category_name;
-    public ImageView background_image;
+    public ProgressBar progressBar;
+    public ImageView wallpaperImage;
 
     private ItemClickListener itemClickListener;
 
@@ -23,8 +24,8 @@ public class CategoryViewHolder extends RecyclerView.ViewHolder implements View.
     public CategoryViewHolder(View itemView) {
         super(itemView);
 
-        background_image = itemView.findViewById(R.id.image);
-        category_name = itemView.findViewById(R.id.name);
+        progressBar = itemView.findViewById(R.id.progress_bar);
+        wallpaperImage = itemView.findViewById(R.id.imageView);
 
         itemView.setOnClickListener(this);
     }

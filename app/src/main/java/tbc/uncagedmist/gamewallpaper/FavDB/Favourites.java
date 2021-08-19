@@ -4,15 +4,16 @@ import androidx.annotation.NonNull;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 
-@Entity(tableName = "favs",primaryKeys = {"imageLink","categoryId"})
+@Entity(tableName = "favourites",primaryKeys = {"imageLink","imageId"})
 public class Favourites {
+
     @ColumnInfo(name = "imageLink")
     @NonNull
     private String imageLink;
 
-    @ColumnInfo(name = "categoryId")
+    @ColumnInfo(name = "imageId")
     @NonNull
-    private String categoryId;
+    private String imageId;
 
     @ColumnInfo(name = "saveTime")
     private String saveTime;
@@ -20,9 +21,9 @@ public class Favourites {
     @ColumnInfo(name = "key")
     private String key;
 
-    public Favourites(@NonNull String imageLink, @NonNull String categoryId, String saveTime, String key) {
+    public Favourites(@NonNull String imageLink, @NonNull String imageId, String saveTime, String key) {
         this.imageLink = imageLink;
-        this.categoryId = categoryId;
+        this.imageId = imageId;
         this.saveTime = saveTime;
         this.key = key;
     }
@@ -37,12 +38,12 @@ public class Favourites {
     }
 
     @NonNull
-    public String getCategoryId() {
-        return categoryId;
+    public String getImageId() {
+        return imageId;
     }
 
-    public void setCategoryId(@NonNull String categoryId) {
-        this.categoryId = categoryId;
+    public void setImageId(@NonNull String imageId) {
+        this.imageId = imageId;
     }
 
     public String getSaveTime() {

@@ -11,30 +11,17 @@
     tools:context=".HomeActivity"
     tools:showIn="@layout/app_bar_home">
 
-    <com.google.android.gms.ads.AdView
-        android:id="@+id/aboveBanner"
-        android:layout_centerHorizontal="true"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        ads:adSize="BANNER"
-        ads:adUnitId="@string/BANNER_ID" />
-
     <FrameLayout
         android:id="@+id/main_frame"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@id/aboveBanner"
-        android:layout_above="@id/bottomBanner"
-        android:layout_weight="1"/>
+        android:layout_above="@id/ad_container" />
 
-    <com.google.android.gms.ads.AdView
-        android:id="@+id/bottomBanner"
-        android:layout_centerHorizontal="true"
-        android:layout_width="wrap_content"
+    <FrameLayout
+        android:id="@+id/ad_container"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_above="@id/customBottomBar"
-        ads:adSize="BANNER"
-        ads:adUnitId="@string/BANNER_ID" />
+        android:layout_above="@id/customBottomBar"/>
 
     <tbc.uncagedmist.gamewallpaper.Utility.CurvedBottomNavigationView
         android:layout_gravity="bottom"

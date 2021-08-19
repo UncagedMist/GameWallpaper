@@ -1,5 +1,6 @@
 package tbc.uncagedmist.gamewallpaper.Common;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
@@ -7,32 +8,24 @@ import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 
-import com.adcolony.sdk.AdColony;
-import com.adcolony.sdk.AdColonyAppOptions;
+import com.facebook.ads.AudienceNetworkAds;
 import com.google.android.gms.ads.MobileAds;
-import com.google.android.gms.ads.initialization.AdapterStatus;
-import com.google.android.gms.ads.initialization.InitializationStatus;
-import com.google.android.gms.ads.initialization.OnInitializationCompleteListener;
 
-import java.util.Map;
-
-import tbc.uncagedmist.gamewallpaper.R;
 import tbc.uncagedmist.gamewallpaper.Utility.AppOpenManager;
 import tbc.uncagedmist.gamewallpaper.Utility.MyNetworkReceiver;
 
 public class MyApplicationClass extends Application {
 
+    @SuppressLint("StaticFieldLeak")
     private static Context context;
 
+    @SuppressLint("StaticFieldLeak")
     private static AppOpenManager appOpenManager;
 
+    @SuppressLint("StaticFieldLeak")
     public static Activity mActivity;
     MyNetworkReceiver mNetworkReceiver;
-
-    public static final String APP_ID = "appefb18ebbefb244938b";
-    public static final String ZONE_ID = "vza503dc75bd8046a0bd";
 
     public static Context getContext() {
         return context;
@@ -41,23 +34,12 @@ public class MyApplicationClass extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-
-        context = getApplicationContext();
-
-        AdColonyAppOptions appOptions = new AdColonyAppOptions();
-
-        AdColony.configure(this, appOptions, APP_ID, ZONE_ID);
+        AudienceNetworkAds.initialize(this);
 
         MobileAds.initialize(this, initializationStatus -> {
-
-            Map<String, AdapterStatus> statusMap = initializationStatus.getAdapterStatusMap();
-            for (String adapterClass : statusMap.keySet()) {
-                AdapterStatus status = statusMap.get(adapterClass);
-                Log.d("Apex Wallpaper", String.format(
-                        "Adapter name: %s, Description: %s, Latency: %d",
-                        adapterClass, status.getDescription(), status.getLatency()));
-            }
         });
+
+        context = getApplicationContext();
 
         appOpenManager = new AppOpenManager(this);
 
@@ -101,6 +83,7 @@ public class MyApplicationClass extends Application {
         });
     }
 
+    @SuppressLint("ObsoleteSdkInt")
     private void registerNetworkBroadcastForLollipop() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             registerReceiver(mNetworkReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));

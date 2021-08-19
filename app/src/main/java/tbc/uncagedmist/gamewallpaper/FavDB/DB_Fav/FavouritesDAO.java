@@ -1,5 +1,4 @@
-package tbc.uncagedmist.gamewallpaper.FavDB.LocalDB;
-
+package tbc.uncagedmist.gamewallpaper.FavDB.DB_Fav;
 
 import androidx.room.Dao;
 import androidx.room.Delete;
@@ -15,7 +14,7 @@ import tbc.uncagedmist.gamewallpaper.FavDB.Favourites;
 @Dao
 public interface FavouritesDAO {
 
-    @Query("SELECT * FROM favs ORDER BY saveTime DESC LIMIT 10")
+    @Query("SELECT * FROM favourites ORDER BY saveTime DESC LIMIT 20")
     Flowable<List<Favourites>> getAllFavourites();
 
     @Insert
@@ -27,6 +26,6 @@ public interface FavouritesDAO {
     @Delete
     void deleteFavourites(Favourites...favourites);
 
-    @Query("DELETE FROM favs")
+    @Query("DELETE FROM favourites")
     void deleteAllFavourites();
 }

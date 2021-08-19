@@ -7,15 +7,17 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
+import android.view.Display;
 import android.view.MenuItem;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.FrameLayout;
 import android.widget.Toast;
 
-import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdSize;
 import com.google.android.gms.ads.AdView;
-import com.google.android.gms.ads.LoadAdError;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
@@ -59,7 +61,8 @@ public class HomeActivity extends AppCompatActivity
 
     FloatingActionButton fab;
 
-    AdView aboveBanner, bottomBanner;
+    FrameLayout adContainerView;
+    AdView adView;
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull @NotNull String[] permissions,
@@ -108,13 +111,14 @@ public class HomeActivity extends AppCompatActivity
         curvedBottomNavigationView = findViewById(R.id.customBottomBar);
         fab = findViewById(R.id.fab);
 
-        aboveBanner = findViewById(R.id.aboveBanner);
-        bottomBanner = findViewById(R.id.bottomBanner);
+        adContainerView = findViewById(R.id.ad_container);
+        // Step 1 - Create an AdView and set the ad unit ID on it.
 
-        AdRequest adRequest = new AdRequest.Builder().build();
+        adView = new AdView(this);
+        adView.setAdUnitId(getString(R.string.BANNER_ID));
+        adContainerView.addView(adView);
 
-        aboveBanner.loadAd(adRequest);
-        bottomBanner.loadAd(adRequest);
+        loadBanner();
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -141,7 +145,7 @@ public class HomeActivity extends AppCompatActivity
                         }
                         else if (item.getItemId() == R.id.action_trending) {
                             getSupportActionBar().setTitle("Trending");
-                            fragment = new PopularFragment();
+                            fragment = new PopularFragment(getApplicationContext());
                             fab.setImageResource(R.drawable.ic_baseline_stream_24);
                         }
                         else if (item.getItemId() == R.id.action_recent) {
@@ -160,8 +164,34 @@ public class HomeActivity extends AppCompatActivity
 
         loadFragment(CategoryFragment.getInstance());
         fab.setImageResource(R.drawable.ic_baseline_legend_toggle_24);
+    }
 
-        adMethod();
+    private void loadBanner() {
+        AdRequest adRequest =
+                new AdRequest.Builder().build();
+
+        AdSize adSize = getAdSize();
+        // Step 4 - Set the adaptive ad size on the ad view.
+        adView.setAdSize(adSize);
+
+
+        // Step 5 - Start loading the ad in the background.
+        adView.loadAd(adRequest);
+    }
+
+    private AdSize getAdSize() {
+        // Step 2 - Determine the screen width (less decorations) to use for the ad width.
+        Display display = getWindowManager().getDefaultDisplay();
+        DisplayMetrics outMetrics = new DisplayMetrics();
+        display.getMetrics(outMetrics);
+
+        float widthPixels = outMetrics.widthPixels;
+        float density = outMetrics.density;
+
+        int adWidth = (int) (widthPixels / density);
+
+        // Step 3 - Get adaptive ad size and return for setting on the ad view.
+        return AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(this, adWidth);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -202,66 +232,6 @@ public class HomeActivity extends AppCompatActivity
                     })
                     .build();
         }
-    }
-
-    private void adMethod() {
-        aboveBanner.setAdListener(new AdListener() {
-            @Override
-            public void onAdLoaded() {
-                // Code to be executed when an ad finishes loading.
-            }
-
-            @Override
-            public void onAdFailedToLoad(LoadAdError adError) {
-                // Code to be executed when an ad request fails.
-            }
-
-            @Override
-            public void onAdOpened() {
-                // Code to be executed when an ad opens an overlay that
-                // covers the screen.
-            }
-
-            @Override
-            public void onAdClicked() {
-                // Code to be executed when the user clicks on an ad.
-            }
-
-            @Override
-            public void onAdClosed() {
-                // Code to be executed when the user is about to return
-                // to the app after tapping on an ad.
-            }
-        });
-
-        bottomBanner.setAdListener(new AdListener() {
-            @Override
-            public void onAdLoaded() {
-                // Code to be executed when an ad finishes loading.
-            }
-
-            @Override
-            public void onAdFailedToLoad(LoadAdError adError) {
-                // Code to be executed when an ad request fails.
-            }
-
-            @Override
-            public void onAdOpened() {
-                // Code to be executed when an ad opens an overlay that
-                // covers the screen.
-            }
-
-            @Override
-            public void onAdClicked() {
-                // Code to be executed when the user clicks on an ad.
-            }
-
-            @Override
-            public void onAdClosed() {
-                // Code to be executed when the user is about to return
-                // to the app after tapping on an ad.
-            }
-        });
     }
 
     @Override
@@ -343,7 +313,7 @@ public class HomeActivity extends AppCompatActivity
                 .setPositiveBtnText("Rate US")
                 .setNegativeBtnBackground(Color.parseColor("#FFA9A7A8"))  //Don't pass R.color.colorvalue
                 .setAnimation(Animation.POP)
-                .isCancellable(true)
+                .isCancellable(false)
                 .setIcon(R.drawable.ic_star_border_black_24dp, Icon.Visible)
                 .OnPositiveClicked(() ->
                         startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=tbc.uncagedmist.allgameswallpapers"))))

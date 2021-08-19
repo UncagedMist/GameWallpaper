@@ -1,19 +1,19 @@
-package tbc.uncagedmist.gamewallpaper.Database;
+package tbc.uncagedmist.gamewallpaper.RecentDB;
 
 import androidx.annotation.NonNull;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 
-@Entity(tableName = "recents",primaryKeys = {"imageLink","categoryId"})
-public class Recents {
+@Entity(tableName = "recent",primaryKeys = {"imageLink","imageId"})
+public class Recent {
 
     @ColumnInfo(name = "imageLink")
     @NonNull
     private String imageLink;
 
-    @ColumnInfo(name = "categoryId")
+    @ColumnInfo(name = "imageId")
     @NonNull
-    private String categoryId;
+    private String imageId;
 
     @ColumnInfo(name = "saveTime")
     private String saveTime;
@@ -21,9 +21,9 @@ public class Recents {
     @ColumnInfo(name = "key")
     private String key;
 
-    public Recents(@NonNull String imageLink, @NonNull String categoryId, String saveTime, String key) {
+    public Recent(@NonNull String imageLink, @NonNull String imageId, String saveTime, String key) {
         this.imageLink = imageLink;
-        this.categoryId = categoryId;
+        this.imageId = imageId;
         this.saveTime = saveTime;
         this.key = key;
     }
@@ -38,12 +38,12 @@ public class Recents {
     }
 
     @NonNull
-    public String getCategoryId() {
-        return categoryId;
+    public String getImageId() {
+        return imageId;
     }
 
-    public void setCategoryId(@NonNull String categoryId) {
-        this.categoryId = categoryId;
+    public void setImageId(@NonNull String imageId) {
+        this.imageId = imageId;
     }
 
     public String getSaveTime() {

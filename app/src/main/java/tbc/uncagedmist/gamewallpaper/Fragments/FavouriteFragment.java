@@ -22,10 +22,10 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import tbc.uncagedmist.gamewallpaper.Adapter.MyFavAdapter;
 import tbc.uncagedmist.gamewallpaper.Common.Common;
+import tbc.uncagedmist.gamewallpaper.FavDB.DB_Fav.FavouriteDatabase;
+import tbc.uncagedmist.gamewallpaper.FavDB.DB_Fav.FavouritesDataSource;
 import tbc.uncagedmist.gamewallpaper.FavDB.DataSource.FavouriteRepository;
 import tbc.uncagedmist.gamewallpaper.FavDB.Favourites;
-import tbc.uncagedmist.gamewallpaper.FavDB.LocalDB.FavouritesDataSource;
-import tbc.uncagedmist.gamewallpaper.FavDB.LocalDB.LocalDatabase;
 import tbc.uncagedmist.gamewallpaper.R;
 
 @SuppressLint("ValidFragment")
@@ -48,7 +48,7 @@ public class FavouriteFragment extends Fragment {
         this.context = context;
 
         compositeDisposable = new CompositeDisposable();
-        LocalDatabase database = LocalDatabase.getInstance(context);
+        FavouriteDatabase database = FavouriteDatabase.getInstance(context);
         favouriteRepository = FavouriteRepository.getInstance(FavouritesDataSource.getInstance(database.favouritesDAO()));
     }
 
@@ -92,7 +92,7 @@ public class FavouriteFragment extends Fragment {
         Disposable disposable = favouriteRepository.getAllFavourites()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(favourites ->
-                        onGetAllFavSuccess(favourites),
+                                onGetAllFavSuccess(favourites),
                         throwable ->
                                 Log.d("ERROR", throwable.getMessage()));
         compositeDisposable.add(disposable);

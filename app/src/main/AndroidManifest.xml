@@ -19,22 +19,14 @@
         android:theme="@style/Theme.AppCompat.NoActionBar"
         android:usesCleartextTraffic="true">
 
-        <activity android:name=".HomeActivity"
-            android:screenOrientation="portrait"/>
-        <activity
-            android:name=".ViewWallpaperActivity"
-            android:screenOrientation="portrait" />
-        <activity
-            android:name=".ListWallpaperActivity"
-            android:screenOrientation="portrait" />
+        <activity android:name=".HomeActivity" />
 
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="@string/APP_ID" />
 
         <activity
-            android:name=".MainActivity"
-            android:screenOrientation="portrait">
+            android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
